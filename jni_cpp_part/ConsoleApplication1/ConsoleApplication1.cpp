@@ -1,8 +1,8 @@
 // ConsoleApplication1.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
-#include <vector>
 #include <cassert>
+#include <vector>
 #include <iostream>
 #include "include/jni.h"
 #include "include/tobii/tobii.h"
@@ -11,8 +11,9 @@
 
 
 tobii_api_t* global_api = nullptr;
+tobii_device_t* global_device = nullptr;
 
-std::string present_tobii_error(const tobii_error_t error)
+const char* present_tobii_error(const tobii_error_t error)
 {
   switch (error)
   {
@@ -45,7 +46,7 @@ std::string present_tobii_error(const tobii_error_t error)
     case TOBII_ERROR_OPERATION_FAILED:
       return "ERROR_OPERATION_FAILED";
     case TOBII_ERROR_CONFLICTING_API_INSTANCES:
-      return "ERROR_OPERATION_FAILED";
+      return "ERROR_CONFLICTING_API_INSTANCES";
     case TOBII_ERROR_CALIBRATION_BUSY:
       return "ERROR_CALIBRATION_BUSY";
     case TOBII_ERROR_CALLBACK_IN_PROGRESS:
@@ -63,82 +64,132 @@ std::string present_tobii_error(const tobii_error_t error)
   }
 }
 
-std::string initialize_eye_tracking_api()
+enum tobii_error_t initialize_eye_tracking_api()
 {
   if (global_api != nullptr)
-    return "ERROR_ALREADY_INITIALIZED";
+    return TOBII_ERROR_ALREADY_SUBSCRIBED;
 
   tobii_api_t* api = nullptr;
   const auto result = tobii_api_create(&api, nullptr, nullptr);
-  if (result != TOBII_ERROR_NO_ERROR)
-    return present_tobii_error(result);
+  if (result == TOBII_ERROR_NO_ERROR)
+  {
+    global_api = api;
+  }
 
-  global_api = api;
-  return "";
+  return result;
 }
 
-std::string free_eye_tracking_api()
+enum tobii_error_t free_eye_tracking_api()
 {
   if (global_api == nullptr)
-    return "ERROR_NOT_INITIALIZED";
+    return TOBII_ERROR_NOT_SUBSCRIBED;
 
   const auto result = tobii_api_destroy(global_api);
-  if (result != TOBII_ERROR_NO_ERROR)
-    return present_tobii_error(result);
+  if (result == TOBII_ERROR_NO_ERROR)
+  {
+    global_api = nullptr;
+  }
 
-  global_api = nullptr;
-  return "";
+  return result;
 }
 
-std::vector<std::string> get_eye_tracking_devices()
+enum tobii_error_t list_eye_tracking_devices(std::vector<std::string>& devices)
 {
-  std::vector<std::string> devices;
-
   if (global_api == nullptr)
-  {
-    devices.emplace_back("ERROR_NOT_INITIALIZED");
-  }
-  else
-  {
-    const auto result = tobii_enumerate_local_device_urls(
-      global_api,
-      [](char const* url, void* userData)
+    return TOBII_ERROR_NOT_SUBSCRIBED;
+
+  return  tobii_enumerate_local_device_urls(
+    global_api,
+    [](char const* url, void* userData)
+    {
+      auto* devices_ptr = static_cast<std::vector<std::string>*>(userData);
+      devices_ptr->push_back(std::string(url));
+    },
+    &devices);
+}
+
+enum tobii_error_t connect_eye_tracking_device(const std::string& deviceUrl)
+{
+  if (global_api == nullptr)
+    return TOBII_ERROR_NOT_SUBSCRIBED;
+  if (global_device != nullptr)
+    return TOBII_ERROR_ALREADY_SUBSCRIBED;
+
+  return tobii_device_create(
+    global_api, deviceUrl.c_str(), TOBII_FIELD_OF_USE_INTERACTIVE, &global_device);
+}
+
+enum tobii_error_t disconnect_eye_tracking_device()
+{
+  if (global_api == nullptr)
+    return TOBII_ERROR_NOT_SUBSCRIBED;
+  if (global_device == nullptr)
+    return TOBII_ERROR_NOT_SUBSCRIBED;
+
+  const auto result = tobii_device_destroy(global_device);
+  global_device = nullptr;
+  return result;
+}
+
+typedef void (*f_process_gaze_point)(float, float);
+
+enum tobii_error_t connect_eye_tracking_gaze_stream(const f_process_gaze_point handler)
+{
+  if (global_device == nullptr)
+    return TOBII_ERROR_NOT_SUBSCRIBED;
+
+  return  tobii_gaze_point_subscribe(
+    global_device,
+    [](tobii_gaze_point_t const* gazePoint, void* userData)
+    {
+      if (gazePoint->validity == TOBII_VALIDITY_VALID)
       {
-        auto* devices_ptr = static_cast<std::vector<std::string>*>(userData);
-        devices_ptr->push_back(std::string(url));
-      },
-      &devices);
+        // ReSharper disable once CppReinterpretCastFromVoidPtr
+        const auto ptr = reinterpret_cast<f_process_gaze_point>(userData);
+        ptr(gazePoint->position_xy[0], gazePoint->position_xy[1]);
+      }
+    },
+    // ReSharper disable once CppRedundantCastExpression
+    reinterpret_cast<void*>(handler));
+}
 
-    devices.push_back(present_tobii_error(result));
-  }
+enum tobii_error_t disconnect_eye_tracking_gaze_stream()
+{
+  if (global_device == nullptr)
+    return TOBII_ERROR_NOT_SUBSCRIBED;
 
-  return devices;
+  return tobii_gaze_point_unsubscribe(global_device);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
+// ReSharper disable CppInconsistentNaming
 
 JNIEXPORT jstring JNICALL Java_InitializeEyeTrackingApi(JNIEnv* env, jobject)
 {
   const auto result = initialize_eye_tracking_api();
-  return env->NewStringUTF(result.c_str());
+  return env->NewStringUTF(present_tobii_error(result));
 }
 
 JNIEXPORT jstring JNICALL Java_FreeEyeTrackingApi(JNIEnv* env, jobject)
 {
   const auto result = free_eye_tracking_api();
-  return env->NewStringUTF(result.c_str());
+  return env->NewStringUTF(present_tobii_error(result));
 }
 
-JNIEXPORT jobjectArray JNICALL Java_GetEyeTrackingDevices(JNIEnv* env, jobject)
+JNIEXPORT jobjectArray JNICALL Java_ListEyeTrackingDevices(JNIEnv* env, jobject)
 {
-  const auto devices = get_eye_tracking_devices();
+  std::vector<std::string> devices;
+  const auto result = list_eye_tracking_devices(devices);
 
   const auto array_object = env->NewObjectArray(
-    static_cast<jsize>(devices.size()), env->FindClass("java/lang/String"), nullptr);
+    static_cast<jsize>(devices.size() + 1), env->FindClass("java/lang/String"), nullptr);
 
   if (array_object == nullptr) return nullptr;
 
-  auto index = 0;
+  env->SetObjectArrayElement(
+    array_object, 0, env->NewStringUTF(present_tobii_error(result)));
+
+  auto index = 1;
   for (auto const& element : devices)
   {
     const auto str = env->NewStringUTF(element.c_str());
@@ -148,24 +199,39 @@ JNIEXPORT jobjectArray JNICALL Java_GetEyeTrackingDevices(JNIEnv* env, jobject)
   return array_object;
 }
 
-JNIEXPORT void JNICALL Java_HelloJNI_sayHello(JNIEnv* env, jobject thisObj)
+JNIEXPORT jstring JNICALL Java_ConnectEyeTrackingDevice(JNIEnv* env, jobject, jstring deviceUrl)
 {
-  printf("Hello World From Native!\n");
-  return;
+  const char* native_url = env->GetStringUTFChars(deviceUrl, nullptr);
+  const auto device_result = connect_eye_tracking_device(native_url);
+  env->ReleaseStringUTFChars(deviceUrl, native_url);
+
+  if (device_result != TOBII_ERROR_NO_ERROR)
+    return env->NewStringUTF(present_tobii_error(device_result)); // error
+
+  const auto stream_result =
+    connect_eye_tracking_gaze_stream([](float x, float y)
+    {
+      // TODO: JNI callback
+      printf("Gaze point: %f, %f\n", x, y);
+    });
+
+  return env->NewStringUTF(present_tobii_error(stream_result));
 }
 
+JNIEXPORT jstring JNICALL Java_DisconnectEyeTrackingDevice(JNIEnv* env, jobject)
+{
+  const auto stream_result = disconnect_eye_tracking_gaze_stream();
+
+  if (stream_result != TOBII_ERROR_NO_ERROR)
+    return env->NewStringUTF(present_tobii_error(stream_result)); // error
+
+  const auto device_result = disconnect_eye_tracking_device();
+  return env->NewStringUTF(present_tobii_error(device_result));
+}
+
+// ReSharper restore CppInconsistentNaming
 /////////////////////////////////////////////////////////////////////////////////////
 
-
-void url_receiver(char const* url, void* user_data)
-{
-  const auto buffer = static_cast<char*>(user_data);
-  if (*buffer != '\0')
-    return; // only keep first value
-
-  if (strlen(url) < 256)
-    strcpy_s(buffer, 256, url);
-}
 
 void gaze_point_callback(tobii_gaze_point_t const* gaze_point, void* /* user_data */)
 {
@@ -178,40 +244,37 @@ void gaze_point_callback(tobii_gaze_point_t const* gaze_point, void* /* user_dat
   }
 }
 
-
-
-
-
-
 int main()
 {
   auto api_result = initialize_eye_tracking_api();
-  auto devices = get_eye_tracking_devices();
+  std::vector<std::string> devices;
+  auto list_result = list_eye_tracking_devices(devices);
+  auto connection_result = connect_eye_tracking_device(devices[0]);
+  auto stream = connect_eye_tracking_gaze_stream([](float x, float y)
+    {
+      printf("Gaze point: %f, %f\n", x, y);
+    });
 
-  return 0;
-
-  tobii_api_t* api = global_api;
-  //tobii_error_t result = tobii_api_create(&api, nullptr, nullptr);
-  //assert(result == TOBII_ERROR_NO_ERROR);
-
-  char url[256] = { 0 };
-  //result = tobii_enumerate_local_device_urls(api, url_receiver, url);
-
-  tobii_error_t result;
-  result = tobii_enumerate_local_device_urls(global_api, url_receiver, url);
-
-
-  assert(result == TOBII_ERROR_NO_ERROR);
-  if (*url == '\0')
+  for (int i = 0; i < 1000; i++)
   {
-    printf("Error: No device found\n");
-    return 1;
+    auto result = tobii_wait_for_callbacks(1, &global_device);
+
+    //auto result = tobii_device_process_callbacks(global_device);
+
+    assert(result == TOBII_ERROR_NO_ERROR || result == TOBII_ERROR_TIMED_OUT);
+
+    // Process callbacks on this thread if data is available
+    result = tobii_device_process_callbacks(global_device);
+    assert(result == TOBII_ERROR_NO_ERROR);
   }
 
-  // Connect to the first tracker found
-  tobii_device_t* device = nullptr;
-  result = tobii_device_create(api, url, TOBII_FIELD_OF_USE_INTERACTIVE, &device);
-  assert(result == TOBII_ERROR_NO_ERROR);
+  disconnect_eye_tracking_gaze_stream();
+  disconnect_eye_tracking_device();
+  free_eye_tracking_api();
+  return 0;
+
+
+  /*
 
   // Subscribe to gaze data
   result = tobii_gaze_point_subscribe(device, gaze_point_callback, nullptr);
@@ -238,4 +301,5 @@ int main()
   result = tobii_api_destroy(api);
   assert(result == TOBII_ERROR_NO_ERROR);
   return 0;
+  */
 }
