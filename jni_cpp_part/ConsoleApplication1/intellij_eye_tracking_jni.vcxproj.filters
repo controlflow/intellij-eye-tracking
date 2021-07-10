@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ConsoleApplication1.cpp">
+    <ClCompile Include="intellij_eye_track.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
