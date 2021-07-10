@@ -1,15 +1,10 @@
-// ConsoleApplication1.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
-#include <cassert>
 #include <vector>
 #include <iostream>
 #include "include/jni.h"
 #include "include/tobii/tobii.h"
 #include "include/tobii/tobii_streams.h"
 
-
-
+// globals:
 tobii_api_t* global_api = nullptr;
 tobii_device_t* global_device = nullptr;
 float global_last_gaze_point[2] = {0, 0};
@@ -187,75 +182,78 @@ tobii_error_t wait_and_receive_eye_tracking_gaze_position(float position[2])
 /////////////////////////////////////////////////////////////////////////////////////
 // ReSharper disable CppInconsistentNaming
 
-JNIEXPORT jstring JNICALL Java_InitializeEyeTrackingApi(JNIEnv* env, jobject)
+extern "C"
 {
-  const auto result = initialize_eye_tracking_api();
-  return env->NewStringUTF(present_tobii_error(result));
-}
-
-JNIEXPORT jstring JNICALL Java_FreeEyeTrackingApi(JNIEnv* env, jobject)
-{
-  const auto result = free_eye_tracking_api();
-  return env->NewStringUTF(present_tobii_error(result));
-}
-
-JNIEXPORT jobjectArray JNICALL Java_ListEyeTrackingDevices(JNIEnv* env, jobject)
-{
-  std::vector<std::string> devices;
-  const auto result = list_eye_tracking_devices(devices);
-
-  const auto array_object = env->NewObjectArray(
-    static_cast<jsize>(devices.size() + 1), env->FindClass("java/lang/String"), nullptr);
-
-  if (array_object == nullptr) return nullptr;
-
-  env->SetObjectArrayElement(
-    array_object, 0, env->NewStringUTF(present_tobii_error(result)));
-
-  auto index = 1;
-  for (auto const& element : devices)
+  JNIEXPORT jstring JNICALL Java_com_controlflow_EyeTrackerJni_initializeApi(JNIEnv* env, jclass)
   {
-    const auto str = env->NewStringUTF(element.c_str());
-    env->SetObjectArrayElement(array_object, index++, str);
+    const auto result = initialize_eye_tracking_api();
+    return env->NewStringUTF(present_tobii_error(result));
   }
 
-  return array_object;
-}
+  JNIEXPORT jstring JNICALL Java_com_controlflow_EyeTrackerJni_freeApi(JNIEnv* env, jclass)
+  {
+    const auto result = free_eye_tracking_api();
+    return env->NewStringUTF(present_tobii_error(result));
+  }
 
-JNIEXPORT jstring JNICALL Java_ConnectEyeTrackingDevice(JNIEnv* env, jobject, jstring deviceUrl)
-{
-  const char* native_url = env->GetStringUTFChars(deviceUrl, nullptr);
-  const auto device_result = connect_eye_tracking_device(native_url);
-  env->ReleaseStringUTFChars(deviceUrl, native_url);
+  JNIEXPORT jobjectArray JNICALL Java_com_controlflow_EyeTrackerJni_listDevices(JNIEnv* env, jclass)
+  {
+    std::vector<std::string> devices;
+    const auto result = list_eye_tracking_devices(devices);
 
-  if (device_result != TOBII_ERROR_NO_ERROR)
-    return env->NewStringUTF(present_tobii_error(device_result)); // error
+    const auto array_object = env->NewObjectArray(
+      static_cast<jsize>(devices.size() + 1), env->FindClass("java/lang/String"), nullptr);
 
-  const auto stream_result = connect_eye_tracking_gaze_stream();
-  return env->NewStringUTF(present_tobii_error(stream_result));
-}
+    if (array_object == nullptr) return nullptr;
 
-JNIEXPORT jstring JNICALL Java_DisconnectEyeTrackingDevice(JNIEnv* env, jobject)
-{
-  const auto stream_result = disconnect_eye_tracking_gaze_stream();
+    env->SetObjectArrayElement(
+      array_object, 0, env->NewStringUTF(present_tobii_error(result)));
 
-  if (stream_result != TOBII_ERROR_NO_ERROR)
-    return env->NewStringUTF(present_tobii_error(stream_result)); // error
+    auto index = 1;
+    for (auto const& element : devices)
+    {
+      const auto str = env->NewStringUTF(element.c_str());
+      env->SetObjectArrayElement(array_object, index++, str);
+    }
 
-  const auto device_result = disconnect_eye_tracking_device();
-  return env->NewStringUTF(present_tobii_error(device_result));
-}
+    return array_object;
+  }
 
-JNIEXPORT jlong JNICALL Java_ReceivePosition(JNIEnv*, jobject)
-{
-  float position[2];
-  const auto result = wait_and_receive_eye_tracking_gaze_position(position);
+  JNIEXPORT jstring JNICALL Java_com_controlflow_EyeTrackerJni_connectDevice(JNIEnv* env, _jclass, jstring deviceUrl)
+  {
+    const char* native_url = env->GetStringUTFChars(deviceUrl, nullptr);
+    const auto device_result = connect_eye_tracking_device(native_url);
+    env->ReleaseStringUTFChars(deviceUrl, native_url);
 
-  if (result != TOBII_ERROR_NO_ERROR)
-    return 0;
+    if (device_result != TOBII_ERROR_NO_ERROR)
+      return env->NewStringUTF(present_tobii_error(device_result)); // error
 
-  const auto xy = reinterpret_cast<int*>(global_last_gaze_point);
-  return static_cast<jlong>(xy[0]) << 32 | xy[1]; // encode as long
+    const auto stream_result = connect_eye_tracking_gaze_stream();
+    return env->NewStringUTF(present_tobii_error(stream_result));
+  }
+
+  JNIEXPORT jstring JNICALL Java_com_controlflow_EyeTrackerJni_disconnectDevice(JNIEnv* env, jclass)
+  {
+    const auto stream_result = disconnect_eye_tracking_gaze_stream();
+
+    if (stream_result != TOBII_ERROR_NO_ERROR)
+      return env->NewStringUTF(present_tobii_error(stream_result)); // error
+
+    const auto device_result = disconnect_eye_tracking_device();
+    return env->NewStringUTF(present_tobii_error(device_result));
+  }
+
+  JNIEXPORT jlong JNICALL Java_com_controlflow_EyeTrackerJni_receivePosition(JNIEnv*, jclass)
+  {
+    float position[2];
+    const auto result = wait_and_receive_eye_tracking_gaze_position(position);
+
+    if (result != TOBII_ERROR_NO_ERROR)
+      return 0;
+
+    const auto xy = reinterpret_cast<int*>(position);
+    return static_cast<jlong>(xy[0]) << 32 | xy[1]; // encode as long
+  }
 }
 
 // ReSharper restore CppInconsistentNaming
