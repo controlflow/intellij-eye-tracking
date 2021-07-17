@@ -1,6 +1,5 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.changelog.closure
-import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -77,10 +76,7 @@ tasks {
     withType<JavaCompile> {
         sourceCompatibility = "1.8"
         targetCompatibility = "1.8"
-
-
     }
-
 
     listOf("compileKotlin", "compileTestKotlin").forEach {
         getByName<KotlinCompile>(it) {
@@ -101,6 +97,16 @@ tasks {
                 changelog.getLatest().toHTML()
             }
         )
+    }
+
+    val addBinariesToSandbox by registering(Copy::class) {
+        from ("$projectDir\\lib")
+        into(file("$buildDir\\idea-sandbox\\plugins\\${rootProject.name}\\lib"))
+        include("*.dll")
+    }
+
+    prepareSandbox {
+        finalizedBy(addBinariesToSandbox)
     }
 
     runPluginVerifier {

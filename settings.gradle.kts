@@ -1,1 +1,1 @@
-rootProject.name = "intellij-eye-tracker"
+rootProject.name = "eye-tracking"
