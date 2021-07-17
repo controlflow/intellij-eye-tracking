@@ -5,4 +5,5 @@
 ## 0.9.0
 ### Features
 - Initial version
-- Tested with Tobii 5C eye tracker
+- Tested with Tobii 5 eye tracker
+- Only supports Windows x64 (because of the Tobii drivers)

@@ -7,7 +7,7 @@
   <depends>com.intellij.modules.platform</depends>
   <description>
     Utilize popular Tobii gaming eye tracking hardware to enrich the UI interactions
-    with IntelliJ based IDEs and use mouse less often
+    with IntelliJ based IDEs and use mouse less often (WINDOWS 64-BIT ONLY)
   </description>
 
   <extensions defaultExtensionNs="com.intellij">

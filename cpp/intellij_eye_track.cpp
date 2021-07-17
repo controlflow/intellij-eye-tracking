@@ -3,6 +3,7 @@
 #include "include/jni.h"
 #include "include/tobii/tobii.h"
 #include "include/tobii/tobii_streams.h"
+#pragma warning(disable:26812)
 
 // globals:
 tobii_api_t* global_api = nullptr;
@@ -184,19 +185,19 @@ tobii_error_t wait_and_receive_eye_tracking_gaze_position(float position[2])
 
 extern "C"
 {
-  JNIEXPORT jstring JNICALL Java_com_controlflow_EyeTrackerJni_initializeApi(JNIEnv* env, jclass)
+  JNIEXPORT jstring JNICALL Java_com_controlflow_eyetracking_native_EyeTrackerJni_initializeApi(JNIEnv* env, jclass)
   {
     const auto result = initialize_eye_tracking_api();
     return env->NewStringUTF(present_tobii_error(result));
   }
 
-  JNIEXPORT jstring JNICALL Java_com_controlflow_EyeTrackerJni_freeApi(JNIEnv* env, jclass)
+  JNIEXPORT jstring JNICALL Java_com_controlflow_eyetracking_native_EyeTrackerJni_freeApi(JNIEnv* env, jclass)
   {
     const auto result = free_eye_tracking_api();
     return env->NewStringUTF(present_tobii_error(result));
   }
 
-  JNIEXPORT jobjectArray JNICALL Java_com_controlflow_EyeTrackerJni_listDevices(JNIEnv* env, jclass)
+  JNIEXPORT jobjectArray JNICALL Java_com_controlflow_eyetracking_native_EyeTrackerJni_listDevices(JNIEnv* env, jclass)
   {
     std::vector<std::string> devices;
     const auto result = list_eye_tracking_devices(devices);
@@ -219,7 +220,7 @@ extern "C"
     return array_object;
   }
 
-  JNIEXPORT jstring JNICALL Java_com_controlflow_EyeTrackerJni_connectDevice(JNIEnv* env, _jclass, jstring deviceUrl)
+  JNIEXPORT jstring JNICALL Java_com_controlflow_eyetracking_native_EyeTrackerJni_connectDevice(JNIEnv* env, _jclass, jstring deviceUrl)
   {
     const char* native_url = env->GetStringUTFChars(deviceUrl, nullptr);
     const auto device_result = connect_eye_tracking_device(native_url);
@@ -232,7 +233,7 @@ extern "C"
     return env->NewStringUTF(present_tobii_error(stream_result));
   }
 
-  JNIEXPORT jstring JNICALL Java_com_controlflow_EyeTrackerJni_disconnectDevice(JNIEnv* env, jclass)
+  JNIEXPORT jstring JNICALL Java_com_controlflow_eyetracking_native_EyeTrackerJni_disconnectDevice(JNIEnv* env, jclass)
   {
     const auto stream_result = disconnect_eye_tracking_gaze_stream();
 
@@ -243,7 +244,7 @@ extern "C"
     return env->NewStringUTF(present_tobii_error(device_result));
   }
 
-  JNIEXPORT jlong JNICALL Java_com_controlflow_EyeTrackerJni_receivePosition(JNIEnv*, jclass)
+  JNIEXPORT jlong JNICALL Java_com_controlflow_eyetracking_native_EyeTrackerJni_receivePosition(JNIEnv*, jclass)
   {
     float position[2];
     const auto result = wait_and_receive_eye_tracking_gaze_position(position);
