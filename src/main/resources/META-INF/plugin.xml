@@ -21,6 +21,12 @@
     <notification.group id="eyetracking-plugin"
                         shortTitle="Eye Tracking"
                         groupId="eyetracking-plugin" />
+
+    <statusBarWidgetFactory id="eyeTrackingWidget"
+                            implementation="com.controlflow.eyetracking.widgets.EyeTrackingWidget"
+                            order="before positionWidget" />
+    <applicationService serviceImplementation="com.controlflow.eyetracking.settings.EyeTrackingPluginSettings"/>
+    <search.topHitProvider implementation="com.controlflow.eyetracking.settings.EyeTrackingSettingsTopHitProvider" />
   </extensions>
 
   <applicationListeners>
@@ -30,6 +36,6 @@
 
   <actions>
     <action class="com.controlflow.eyetracking.actions.EyeTrackerAction"
-            description="Eye tracker status" />
+            text="Eye Tracking Status" />
   </actions>
 </idea-plugin>

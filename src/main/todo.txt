@@ -1,0 +1,10 @@
+- plugin enable/disable setting
+- status bar widget
+  - context menu
+  - draw eyes?
+
+
+- platform check on startup, produce notifications
+- fallback to disconnected state
+
+- reconnect on connection errors
