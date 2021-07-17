@@ -1,19 +1,35 @@
-<idea-plugin>
-    <id>com.github.controlflow.intellijeyetracker</id>
-    <name>intellij-eye-tracker</name>
-    <vendor>controlflow</vendor>
+<idea-plugin url="https://github.com/controlflow/intellij-eye-tracker">
+  <name>Eye Tracking</name>
+  <id>com.controlflow.eyetracking</id>
+  <vendor url="https://github.com/controlflow"
+          email="shvedov89@gmail.com">controlflow</vendor>
 
-    <!-- Product and plugin compatibility requirements -->
-    <!-- https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html -->
-    <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.platform</depends>
+  <description>
+    Utilize popular Tobii gaming eye tracking hardware to enrich the UI interactions
+    with IntelliJ based IDEs and use mouse less often
+  </description>
 
-    <extensions defaultExtensionNs="com.intellij">
-        <applicationService serviceImplementation="com.github.controlflow.intellijeyetracker.services.MyApplicationService"/>
-        <projectService serviceImplementation="com.github.controlflow.intellijeyetracker.services.MyProjectService"/>
-    </extensions>
+  <extensions defaultExtensionNs="com.intellij">
+    <applicationService serviceImplementation="com.controlflow.eyetracking.services.MyApplicationService"/>
+    <projectService serviceImplementation="com.controlflow.eyetracking.services.MyProjectService"/>
 
-    <applicationListeners>
-        <listener class="com.github.controlflow.intellijeyetracker.listeners.MyProjectManagerListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </applicationListeners>
+
+    <postStartupActivity implementation="com.controlflow.eyetracking.services.PostStartup"/>
+
+
+    <notification.group id="eyetracking-plugin"
+                        shortTitle="Eye Tracking"
+                        groupId="eyetracking-plugin" />
+  </extensions>
+
+  <applicationListeners>
+    <listener class="com.controlflow.eyetracking.listeners.MyProjectManagerListener"
+              topic="com.intellij.openapi.project.ProjectManagerListener"/>
+  </applicationListeners>
+
+  <actions>
+    <action class="com.controlflow.eyetracking.actions.EyeTrackerAction"
+            description="Eye tracker status" />
+  </actions>
 </idea-plugin>

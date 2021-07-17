@@ -1,4 +1,4 @@
-package com.github.controlflow.intellijeyetracker
+package com.controlflow.eyetracking
 
 import com.intellij.AbstractBundle
 import org.jetbrains.annotations.NonNls

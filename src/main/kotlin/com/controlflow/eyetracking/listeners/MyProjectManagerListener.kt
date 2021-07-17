@@ -1,9 +1,9 @@
-package com.github.controlflow.intellijeyetracker.listeners
+package com.controlflow.eyetracking.listeners
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
-import com.github.controlflow.intellijeyetracker.services.MyProjectService
+import com.controlflow.eyetracking.services.MyProjectService
 
 internal class MyProjectManagerListener : ProjectManagerListener {
 

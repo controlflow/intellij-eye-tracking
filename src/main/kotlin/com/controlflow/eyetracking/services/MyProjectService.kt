@@ -1,7 +1,7 @@
-package com.github.controlflow.intellijeyetracker.services
+package com.controlflow.eyetracking.services
 
 import com.intellij.openapi.project.Project
-import com.github.controlflow.intellijeyetracker.MyBundle
+import com.controlflow.eyetracking.MyBundle
 
 class MyProjectService(project: Project) {
 
