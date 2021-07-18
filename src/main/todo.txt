@@ -3,6 +3,11 @@
   - context menu
   - draw eyes?
 
+- capture the ranges of interesting rectangles
+  - multi-monitor support?
+  - send them to other thread
+  - change them on resize
+
 
 - platform check on startup, produce notifications
 - fallback to disconnected state

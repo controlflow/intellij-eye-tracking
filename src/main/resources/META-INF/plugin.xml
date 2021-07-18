@@ -1,4 +1,5 @@
-<idea-plugin url="https://github.com/controlflow/intellij-eye-tracker">
+<idea-plugin url="https://github.com/controlflow/intellij-eye-tracker"
+             require-restart="true">
   <name>Eye Tracking</name>
   <id>com.controlflow.eyetracking</id>
   <vendor url="https://github.com/controlflow"
@@ -11,16 +12,19 @@
   </description>
 
   <extensions defaultExtensionNs="com.intellij">
-    <applicationService serviceImplementation="com.controlflow.eyetracking.services.MyApplicationService"/>
+
+
+    <applicationService serviceImplementation="com.controlflow.eyetracking.services.EyeTrackingApplicationService"/>
     <projectService serviceImplementation="com.controlflow.eyetracking.services.MyProjectService"/>
 
 
     <postStartupActivity implementation="com.controlflow.eyetracking.services.PostStartup"/>
 
 
-    <notification.group id="eyetracking-plugin"
-                        shortTitle="Eye Tracking"
-                        groupId="eyetracking-plugin" />
+<!--    <notificationGroup id="JDK Update Error" displayType="STICKY_BALLOON" />-->
+<!--    <notificationGroup id="Eye Tracking Plugin"-->
+<!--                        dis />-->
+<!--    <notification.parentGroup id="Eye Tracking Plugin" />-->
 
     <statusBarWidgetFactory id="eyeTrackingWidget"
                             implementation="com.controlflow.eyetracking.widgets.EyeTrackingWidget"
@@ -30,8 +34,7 @@
   </extensions>
 
   <applicationListeners>
-    <listener class="com.controlflow.eyetracking.listeners.MyProjectManagerListener"
-              topic="com.intellij.openapi.project.ProjectManagerListener"/>
+
   </applicationListeners>
 
   <actions>

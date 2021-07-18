@@ -27,8 +27,8 @@ class EyeTrackingWidget : StatusBarWidgetFactory {
 }
 
 class MyWidget : CustomStatusBarWidget {
-  private var myDisposed : Boolean = false
-  private var myStatusBar : StatusBar? = null
+  private var myDisposed: Boolean = false
+  private var myStatusBar: StatusBar? = null
 
   override fun ID(): String = "EyeTracking"
 

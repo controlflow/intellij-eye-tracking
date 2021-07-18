@@ -14,9 +14,12 @@ class EyeTrackingPluginSettings : PersistentStateComponent<EyeTrackingPluginSett
   }
 
   override fun getState(): PluginSetting = state
-  override fun loadState(state: PluginSetting) { this.state = state }
+  override fun loadState(state: PluginSetting) {
+    this.state = state
+  }
 
   data class PluginSetting(
-    var isEnabled : Boolean = true,
-    var text : String = "")
+    var isEnabled: Boolean = true,
+    var text: String = ""
+  )
 }

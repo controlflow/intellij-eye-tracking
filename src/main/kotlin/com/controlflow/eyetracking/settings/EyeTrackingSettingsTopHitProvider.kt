@@ -9,7 +9,7 @@ class EyeTrackingSettingsTopHitProvider : OptionsSearchTopHitProvider.Applicatio
 
   override fun getOptions(): MutableCollection<OptionDescription> {
     return mutableListOf(
-      object : EyeTrackingOptionDescription("Eye Tracking Is Enabled") {
+      object : EyeTrackingOptionDescription("Eye Tracking Is Active") {
         override fun isOptionEnabled(): Boolean = EyeTrackingPluginSettings.instance.isEnabled
         override fun setOptionState(enabled: Boolean) {
           EyeTrackingPluginSettings.instance.isEnabled = enabled
@@ -18,7 +18,7 @@ class EyeTrackingSettingsTopHitProvider : OptionsSearchTopHitProvider.Applicatio
     )
   }
 
-  private abstract class EyeTrackingOptionDescription(title: String)
-    : BooleanOptionDescription(title, "eye-tracking.settings")
+  private abstract class EyeTrackingOptionDescription(title: String) :
+    BooleanOptionDescription(title, "eye-tracking.settings")
 }
 

@@ -1,7 +1,6 @@
 package com.controlflow.eyetracking.native
 
-object EyeTrackerJni
-{
+object EyeTrackerJni {
   external fun initializeApi(): String
   external fun freeApi(): String
 
@@ -11,7 +10,7 @@ object EyeTrackerJni
 
   private external fun receivePosition(): Long
 
-  fun receive() : Pair<Float, Float> {
+  fun receive(): Pair<Float, Float> {
     val positionEncoded = receivePosition()
     val x = Float.fromBits(positionEncoded.shr(32).toInt())
     val y = Float.fromBits(positionEncoded.toInt())

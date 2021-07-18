@@ -5,7 +5,7 @@ import com.controlflow.eyetracking.MyBundle
 
 class MyProjectService(project: Project) {
 
-    init {
-        println(MyBundle.message("projectService", project.name))
-    }
+  init {
+    println(MyBundle.message("projectService", project.name))
+  }
 }
