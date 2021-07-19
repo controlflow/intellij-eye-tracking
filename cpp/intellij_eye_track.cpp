@@ -258,8 +258,12 @@ extern "C"
       global_last_gaze_point[1] = NAN;
     }
 
-    const auto xy = reinterpret_cast<int*>(global_last_gaze_point);
-    return static_cast<jlong>(xy[0]) << 32 | xy[1]; // encode as long
+    const auto xy = reinterpret_cast<unsigned int*>(global_last_gaze_point);
+    const unsigned long long x_as_uint = xy[0];
+    const unsigned long long y_as_uint = xy[1];
+
+    const unsigned long long packed = (x_as_uint << 32) | y_as_uint;
+    return static_cast<jlong>(packed);
   }
 }
 
@@ -279,25 +283,14 @@ int main()
   {
     wait_and_receive_eye_tracking_gaze_position();
 
-    auto x = global_last_gaze_point[0];
-    auto y = global_last_gaze_point[1];
-    if (isnan(x))
-    {
-      printf("X IS NAN");
-    }
-    else if (isnan(y))
-    {
-      printf("Y IS NAN");
-    }
-    else
-    {
-      printf("Gaze point: %f, %f\n", x, y);
-    }
+    const auto x = global_last_gaze_point[0];
+    const auto y = global_last_gaze_point[1];
+
+    printf("Gaze point: %f, %f\n", x, y);
   }
 
   disconnect_eye_tracking_gaze_stream();
   disconnect_eye_tracking_device();
   free_eye_tracking_api();
   return 0;
-}
-*/
+}*/
