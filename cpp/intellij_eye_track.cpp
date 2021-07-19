@@ -145,8 +145,8 @@ tobii_error_t connect_eye_tracking_gaze_stream()
       }
       else
       {
-        global_last_gaze_point[0] = NAN;
-        global_last_gaze_point[1] = NAN;
+        global_last_gaze_point[0] = -FLT_MAX;
+        global_last_gaze_point[1] = -FLT_MAX;
       }
     },
     nullptr);
@@ -160,24 +160,28 @@ tobii_error_t disconnect_eye_tracking_gaze_stream()
   return tobii_gaze_point_unsubscribe(global_device);
 }
 
-tobii_error_t wait_and_receive_eye_tracking_gaze_position(float position[2])
+tobii_error_t wait_and_receive_eye_tracking_gaze_position()
 {
   if (global_device == nullptr)
     return TOBII_ERROR_NOT_SUBSCRIBED;
 
-  const auto wait_result = tobii_wait_for_callbacks(1, &global_device);
-  if (wait_result != TOBII_ERROR_NO_ERROR
-      && wait_result != TOBII_ERROR_TIMED_OUT) return wait_result;
+  for (auto index = 0; index < 20; index++) {
+    const auto wait_result = tobii_wait_for_callbacks(1, &global_device);
 
-  const auto process_result = tobii_device_process_callbacks(global_device);
+    if (wait_result == TOBII_ERROR_TIMED_OUT)
+      continue; // loop again
 
-  position[0] = global_last_gaze_point[0];
-  position[1] = global_last_gaze_point[1];
+    if (wait_result != TOBII_ERROR_NO_ERROR)
+      return wait_result;
 
-  global_last_gaze_point[0] = NAN;
-  global_last_gaze_point[1] = NAN;
+    const auto process_result = tobii_device_process_callbacks(global_device);
+    if (process_result != TOBII_ERROR_NO_ERROR)
+      return process_result;
 
-  return process_result;
+    return process_result;
+  }
+
+  return TOBII_ERROR_TIMED_OUT;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -246,13 +250,15 @@ extern "C"
 
   JNIEXPORT jlong JNICALL Java_com_controlflow_eyetracking_native_EyeTrackerJni_receivePosition(JNIEnv*, jclass)
   {
-    float position[2];
-    const auto result = wait_and_receive_eye_tracking_gaze_position(position);
+    const auto result = wait_and_receive_eye_tracking_gaze_position();
 
     if (result != TOBII_ERROR_NO_ERROR)
-      return 0;
+    {
+      global_last_gaze_point[0] = NAN;
+      global_last_gaze_point[1] = NAN;
+    }
 
-    const auto xy = reinterpret_cast<int*>(position);
+    const auto xy = reinterpret_cast<int*>(global_last_gaze_point);
     return static_cast<jlong>(xy[0]) << 32 | xy[1]; // encode as long
   }
 }
@@ -269,12 +275,24 @@ int main()
   auto connection_result = connect_eye_tracking_device(devices[0]);
   auto stream_result = connect_eye_tracking_gaze_stream();
 
-  for (int i = 0; i < 1000; i++)
+  for (int index = 0; index < 1000; index++)
   {
-    float foo1[2];
-    wait_and_receive_eye_tracking_gaze_position(foo1);
+    wait_and_receive_eye_tracking_gaze_position();
 
-    printf("Gaze point: %f, %f\n", foo1[0], foo1[1]);
+    auto x = global_last_gaze_point[0];
+    auto y = global_last_gaze_point[1];
+    if (isnan(x))
+    {
+      printf("X IS NAN");
+    }
+    else if (isnan(y))
+    {
+      printf("Y IS NAN");
+    }
+    else
+    {
+      printf("Gaze point: %f, %f\n", x, y);
+    }
   }
 
   disconnect_eye_tracking_gaze_stream();
