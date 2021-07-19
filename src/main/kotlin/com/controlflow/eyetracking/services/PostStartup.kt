@@ -1,7 +1,5 @@
 package com.controlflow.eyetracking.services
 
-import com.intellij.notification.NotificationType
-import com.intellij.notification.Notifications
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
@@ -15,7 +13,6 @@ class PostStartup : StartupActivity.Background, DumbAware {
     val initializationProblem = service.initializationProblem
     if (initializationProblem != null) {
       EyeTrackingNotifications.initializationFailed(initializationProblem)
-
 
 
     }

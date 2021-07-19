@@ -1,7 +1,7 @@
 package com.controlflow.eyetracking.services
 
-import com.intellij.openapi.project.Project
 import com.controlflow.eyetracking.MyBundle
+import com.intellij.openapi.project.Project
 
 class MyProjectService(project: Project) {
 

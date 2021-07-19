@@ -18,10 +18,10 @@ class EyeTrackingApplicationService : Disposable {
       get() = ServiceManager.getService(EyeTrackingApplicationService::class.java)
   }
 
-  private val myLogger : Logger = Logger.getInstance(EyeTrackingApplicationService::class.java)
-  private var myTrackerThread : EyeTrackerThread? = null
+  private val myLogger: Logger = Logger.getInstance(EyeTrackingApplicationService::class.java)
+  private var myTrackerThread: EyeTrackerThread? = null
 
-  val initializationProblem : String?
+  val initializationProblem: String?
 
   init {
     //ProcessM
@@ -33,6 +33,19 @@ class EyeTrackingApplicationService : Disposable {
       val trackerThread = EyeTrackerThread(EyeTrackingSettings.instance)
       trackerThread.start()
       myTrackerThread = trackerThread
+
+      ApplicationActivationListener.TOPIC.subscribe(this, object : ApplicationActivationListener {
+        override fun applicationActivated(ideFrame: IdeFrame) {
+          // suspend thread
+
+          //super.applicationActivated(ideFrame)
+        }
+
+        override fun delayedApplicationDeactivated(ideFrame: Window) {
+          // resume thread
+          //super.delayedApplicationDeactivated(ideFrame)
+        }
+      })
     }
 
 //    FrameStateListener.TOPIC.subscribe(this, object : FrameStateListener {
@@ -57,18 +70,6 @@ class EyeTrackingApplicationService : Disposable {
       }
     })
 
-    ApplicationActivationListener.TOPIC.subscribe(this, object : ApplicationActivationListener {
-      override fun applicationActivated(ideFrame: IdeFrame) {
-        // suspend thread
-
-        //super.applicationActivated(ideFrame)
-      }
-
-      override fun delayedApplicationDeactivated(ideFrame: Window) {
-        // resume thread
-        //super.delayedApplicationDeactivated(ideFrame)
-      }
-    })
 
     //ApplicationManager.getApplication().isActive
 
@@ -84,17 +85,17 @@ class EyeTrackingApplicationService : Disposable {
 //    }, ModalityState.any())
   }
 
-  private fun tryLoadTrackerLibraries() : String? {
+  private fun tryLoadTrackerLibraries(): String? {
     if (!SystemInfo.isWindows)
       return "Only Windows operating system is supported\n(Tobii drivers limitation)"
     if (!SystemInfo.is64Bit)
       return "Only 64-bit version of Windows is supported\n(Tobii drivers limitation)"
 
-    fun loadNative(libName: String) : String? {
+    fun loadNative(libName: String): String? {
       return try {
         System.loadLibrary(libName)
         null
-      } catch (throwable : Throwable) {
+      } catch (throwable: Throwable) {
         myLogger.error(throwable)
         "Failed to load '$libName' native library"
       }

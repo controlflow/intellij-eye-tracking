@@ -27,7 +27,7 @@
 <!--    <notification.parentGroup id="Eye Tracking Plugin" />-->
 
     <statusBarWidgetFactory id="eyeTrackingWidget"
-                            implementation="com.controlflow.eyetracking.widgets.EyeTrackingWidget"
+                            implementation="com.controlflow.eyetracking.widgets.EyeTrackingWidgetFactory"
                             order="before positionWidget" />
     <applicationService serviceImplementation="com.controlflow.eyetracking.settings.EyeTrackingSettings"/>
     <search.topHitProvider implementation="com.controlflow.eyetracking.settings.EyeTrackingSettingsTopHitProvider" />

@@ -3,7 +3,6 @@ package com.controlflow.eyetracking.actions
 import com.controlflow.eyetracking.services.EyeTrackingApplicationService
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.wm.WindowManager
 import java.awt.GraphicsEnvironment

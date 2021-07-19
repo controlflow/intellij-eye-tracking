@@ -20,6 +20,7 @@ class EyeTrackingSettings : PersistentStateComponent<EyeTrackingSettings.State> 
 
   data class State(
     var isEnabled: Boolean = true,
-    var preferredMonitor : String? = null, // todo: inner type
-    var text: String = "")
+    var preferredMonitor: String? = null, // todo: inner type
+    var text: String = ""
+  )
 }

@@ -2,19 +2,20 @@ package com.controlflow.eyetracking.services
 
 import com.controlflow.eyetracking.native.EyeTrackerJni
 import com.controlflow.eyetracking.settings.EyeTrackingSettings
+import com.controlflow.eyetracking.widgets.EyeTrackingWidget
+import com.intellij.openapi.application.ApplicationManager
 import javax.swing.SwingUtilities
 
 // todo: must re-create on settings change
 // todo: must restart on device disconnect
 // todo: must receive the tree structure
 
-class EyeTrackerThread(private val settings : EyeTrackingSettings.State)
-  : Thread("EyeTrackerPluginThread") {
+class EyeTrackerThread(private val settings: EyeTrackingSettings.State) : Thread("EyeTrackerPluginThread") {
 
-  private var myState : ThreadState = ThreadState.BeforeConnect
-  private var isSuspended : Boolean = false
-  private var wasInitialized : Boolean = false
-  private var wasConnected : Boolean = false
+  private var myState: ThreadState = ThreadState.BeforeConnect
+  private var isSuspended: Boolean = false
+  private var wasInitialized: Boolean = false
+  private var wasConnected: Boolean = false
 
   private enum class ThreadState {
     BeforeConnect, // before .start() is called
@@ -111,15 +112,13 @@ class EyeTrackerThread(private val settings : EyeTrackingSettings.State)
   @Synchronized
   private fun disconnect() {
     if (wasConnected) {
-      val disconnectResult = EyeTrackerJni.disconnectDevice()
-      // disconnect
+      EyeTrackerJni.disconnectDevice()
     }
 
     wasConnected = false
 
     if (wasInitialized) {
-      val freeResult = EyeTrackerJni.freeApi()
-//reportConnectionProblem()
+      EyeTrackerJni.freeApi()
     }
 
     wasInitialized = false
@@ -152,9 +151,13 @@ class EyeTrackerThread(private val settings : EyeTrackingSettings.State)
 
     if (x.isNaN() || y.isNaN()) {
       // probably disconnected
-      reportConnectionProblem("Gaze data stream interrupted, received (x: $x, y: $y)")
+      reportConnectionProblem("Gaze data stream interrupted")
       disconnect()
       myState = ThreadState.FailedToConnect
+    }
+
+    SwingUtilities.invokeLater {
+      ApplicationManager.getApplication().messageBus.syncPublisher(EyeTrackingWidget.TOPIC).set("x: $x y: $y")
     }
 
     // todo: match coordinates against data structure
