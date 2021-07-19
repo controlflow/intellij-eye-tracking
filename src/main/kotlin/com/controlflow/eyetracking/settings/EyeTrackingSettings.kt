@@ -6,20 +6,20 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
 @State(name = "EyeTrackingPluginSettings", storages = [Storage("eyeTrackingPlugin.xml")])
-class EyeTrackingPluginSettings : PersistentStateComponent<EyeTrackingPluginSettings.PluginSetting> {
-  private var state: PluginSetting = PluginSetting()
+class EyeTrackingSettings : PersistentStateComponent<EyeTrackingSettings.State> {
+  private var state: State = State()
 
   companion object {
-    val instance get() : PluginSetting = ServiceManager.getService(EyeTrackingPluginSettings::class.java).state
+    val instance get() : State = ServiceManager.getService(EyeTrackingSettings::class.java).state
   }
 
-  override fun getState(): PluginSetting = state
-  override fun loadState(state: PluginSetting) {
+  override fun getState(): State = state
+  override fun loadState(state: State) {
     this.state = state
   }
 
-  data class PluginSetting(
+  data class State(
     var isEnabled: Boolean = true,
-    var text: String = ""
-  )
+    var preferredMonitor : String? = null, // todo: inner type
+    var text: String = "")
 }

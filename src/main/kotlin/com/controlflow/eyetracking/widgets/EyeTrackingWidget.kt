@@ -15,9 +15,7 @@ class EyeTrackingWidget : StatusBarWidgetFactory {
 
   override fun isAvailable(project: Project): Boolean = true;
 
-  override fun createWidget(project: Project): StatusBarWidget {
-    return MyWidget()
-  }
+  override fun createWidget(project: Project): StatusBarWidget = MyWidget()
 
   override fun disposeWidget(widget: StatusBarWidget) {
     Disposer.dispose(widget)
@@ -27,31 +25,47 @@ class EyeTrackingWidget : StatusBarWidgetFactory {
 }
 
 class MyWidget : CustomStatusBarWidget {
-  private var myDisposed: Boolean = false
+  //private var myDisposed: Boolean = false
   private var myStatusBar: StatusBar? = null
+  //private var myPanel : TextPanel.WithIconAndArrows? = null
+  private var myText: String = ""
 
   override fun ID(): String = "EyeTracking"
 
   override fun install(statusBar: StatusBar) {
-    TextPanel.WithIconAndArrows()
+    //TextPanel.WithIconAndArrows()
 
     myStatusBar = statusBar
     Disposer.register(statusBar, this)
   }
 
-  override fun getComponent(): JComponent {
-    val panel = TextPanel.WithIconAndArrows()
-    panel.text = "aaa"
 
+
+  override fun getComponent(): JComponent {
+
+
+    val panel = TextPanel.WithIconAndArrows()
+
+//    ApplicationManager.getApplication().messageBus.connect(this)
+//      .subscribe(EyeTrackingApplicationService.Topic,
+//      object : I {
+//        override fun bar(s: String) {
+//          //myText = te
+//          panel.text = s;
+//
+//          //myStatusBar!!.updateWidget(ID())
+//        }
+//      })
+
+    panel.text = "init"
     return panel
   }
 
   override fun dispose() {
-    myDisposed = true
-    myStatusBar = null
+    //myDisposed = true
+    //myStatusBar = null
+    //myPanel = null
   }
 
-  override fun getPresentation(): StatusBarWidget.WidgetPresentation? {
-    return null
-  }
+  override fun getPresentation(): StatusBarWidget.WidgetPresentation? = null
 }

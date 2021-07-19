@@ -29,7 +29,7 @@
     <statusBarWidgetFactory id="eyeTrackingWidget"
                             implementation="com.controlflow.eyetracking.widgets.EyeTrackingWidget"
                             order="before positionWidget" />
-    <applicationService serviceImplementation="com.controlflow.eyetracking.settings.EyeTrackingPluginSettings"/>
+    <applicationService serviceImplementation="com.controlflow.eyetracking.settings.EyeTrackingSettings"/>
     <search.topHitProvider implementation="com.controlflow.eyetracking.settings.EyeTrackingSettingsTopHitProvider" />
   </extensions>
 

@@ -10,9 +10,9 @@ class EyeTrackingSettingsTopHitProvider : OptionsSearchTopHitProvider.Applicatio
   override fun getOptions(): MutableCollection<OptionDescription> {
     return mutableListOf(
       object : EyeTrackingOptionDescription("Eye Tracking Is Active") {
-        override fun isOptionEnabled(): Boolean = EyeTrackingPluginSettings.instance.isEnabled
+        override fun isOptionEnabled(): Boolean = EyeTrackingSettings.instance.isEnabled
         override fun setOptionState(enabled: Boolean) {
-          EyeTrackingPluginSettings.instance.isEnabled = enabled
+          EyeTrackingSettings.instance.isEnabled = enabled
         }
       }
     )
