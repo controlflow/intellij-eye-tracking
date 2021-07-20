@@ -2,6 +2,7 @@
              require-restart="true">
   <name>Eye Tracking</name>
   <id>com.controlflow.eyetracking</id>
+  <version>0.9.0</version>
   <vendor url="https://github.com/controlflow"
           email="shvedov89@gmail.com">controlflow</vendor>
 
