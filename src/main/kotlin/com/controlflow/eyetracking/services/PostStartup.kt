@@ -4,7 +4,7 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 
-class PostStartup : StartupActivity.Background, DumbAware {
+class PostStartup : StartupActivity, DumbAware {
   override fun runActivity(project: Project) {
 
     // report error

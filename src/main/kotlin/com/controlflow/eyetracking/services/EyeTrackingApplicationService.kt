@@ -1,16 +1,19 @@
 package com.controlflow.eyetracking.services
 
 import com.controlflow.eyetracking.settings.EyeTrackingSettings
-import com.intellij.application.subscribe
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationActivationListener
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.wm.IdeFrame
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.WindowManagerListener
-import java.awt.Window
+import java.awt.Component
+import java.awt.event.ComponentEvent
+import java.awt.event.ComponentListener
+import java.awt.event.HierarchyBoundsListener
+import java.awt.event.HierarchyEvent
+import javax.swing.SwingUtilities
 
 class EyeTrackingApplicationService : Disposable {
   companion object {
@@ -24,9 +27,6 @@ class EyeTrackingApplicationService : Disposable {
   val initializationProblem: String?
 
   init {
-    //ProcessM
-    // todo: assert on UI thread?
-
     initializationProblem = tryLoadTrackerLibraries()
 
     if (initializationProblem == null) {
@@ -34,28 +34,77 @@ class EyeTrackingApplicationService : Disposable {
       trackerThread.start()
       myTrackerThread = trackerThread
 
-      ApplicationActivationListener.TOPIC.subscribe(this, object : ApplicationActivationListener {
-        override fun applicationActivated(ideFrame: IdeFrame) {
-          // suspend thread
+      SwingUtilities.invokeLater {
+        // suspend eye tracker thread when IntelliJ is not active
+        /*
+        ApplicationActivationListener.TOPIC.subscribe(this, object : ApplicationActivationListener {
+          override fun applicationActivated(ideFrame: IdeFrame) = trackerThread.requestResume()
+          override fun delayedApplicationDeactivated(ideFrame: Window) = trackerThread.requestSuspend()
+        })
+        */
 
-          //super.applicationActivated(ideFrame)
+        val windowManager = WindowManager.getInstance()
+
+        //val graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment()
+        //graphicsEnvironment.screenDevices.
+
+        fun updateComponentHandler(component: Component) {
+          val location = component.locationOnScreen
+          val size = component.size
+          val bounds = component.graphicsConfiguration.bounds
+
+
+          trackerThread.update(component, ScreenRectHandler(
+            location.y / bounds.height.toFloat(),
+            location.x / bounds.width.toFloat(),
+            (location.y + size.height) / bounds.height.toFloat(),
+            (location.x + size.width) / bounds.width.toFloat())
+          {
+
+          })
         }
 
-        override fun delayedApplicationDeactivated(ideFrame: Window) {
-          // resume thread
-          //super.delayedApplicationDeactivated(ideFrame)
+
+        val componentListener = object : ComponentListener {
+          override fun componentResized(e: ComponentEvent) = updateComponentHandler(e.component)
+          override fun componentMoved(e: ComponentEvent) = updateComponentHandler(e.component)
+          override fun componentShown(e: ComponentEvent) { }
+          override fun componentHidden(e: ComponentEvent) { }
         }
-      })
+
+        val hierarchyBoundsListener = object : HierarchyBoundsListener {
+          override fun ancestorMoved(e: HierarchyEvent) = updateComponentHandler(e.component)
+          override fun ancestorResized(e: HierarchyEvent?) {}
+        }
+
+
+
+        // subscribe all the opened frames
+        for (ideFrame in windowManager.allProjectFrames) {
+          ideFrame.component.addComponentListener(componentListener)
+          ideFrame.component.addHierarchyBoundsListener(hierarchyBoundsListener)
+          updateComponentHandler(ideFrame.component)
+        }
+
+        // and also
+        windowManager.addListener(object : WindowManagerListener {
+          override fun frameCreated(frame: IdeFrame) {
+            frame.component.addComponentListener(componentListener)
+            frame.component.addHierarchyBoundsListener(hierarchyBoundsListener)
+          }
+
+          override fun beforeFrameReleased(frame: IdeFrame) {
+            frame.component.removeComponentListener(componentListener)
+            frame.component.removeHierarchyBoundsListener(hierarchyBoundsListener)
+          }
+        })
+      }
+
+
+
+
     }
 
-//    FrameStateListener.TOPIC.subscribe(this, object : FrameStateListener {
-//      override fun onFrameActivated() {
-//        super.onFrameActivated()
-//      }
-//    })
-//FrameStateManager.getInstance().addListener()
-
-    //WindowManager.getInstance().
 
     WindowManager.getInstance().addListener(object : WindowManagerListener {
       override fun frameCreated(frame: IdeFrame) {
@@ -83,6 +132,10 @@ class EyeTrackingApplicationService : Disposable {
 //    ApplicationManager.getApplication().invokeLater({
 //
 //    }, ModalityState.any())
+  }
+
+  fun subscribe() {
+
   }
 
   private fun tryLoadTrackerLibraries(): String? {
@@ -115,4 +168,10 @@ class EyeTrackingApplicationService : Disposable {
 }
 
 
+data class ScreenRectHandler(
+  val top : Float,
+  val left : Float,
+  val bottom : Float,
+  val right : Float,
+  val handler: () -> Unit)
 

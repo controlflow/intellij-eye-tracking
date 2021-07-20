@@ -13,6 +13,7 @@ import javax.swing.SwingUtilities
 class EyeTrackerThread(private val settings: EyeTrackingSettings.State) : Thread("EyeTrackerPluginThread") {
 
   private var myState: ThreadState = ThreadState.BeforeConnect
+  private val myHandlersMap: MutableMap<Any, ScreenRectHandler> = mutableMapOf()
   private var isSuspended: Boolean = false
   private var wasInitialized: Boolean = false
   private var wasConnected: Boolean = false
@@ -156,9 +157,32 @@ class EyeTrackerThread(private val settings: EyeTrackingSettings.State) : Thread
       myState = ThreadState.FailedToConnect
     }
 
-    SwingUtilities.invokeLater {
-      ApplicationManager.getApplication().messageBus.syncPublisher(EyeTrackingWidget.TOPIC).set("x: $x y: $y")
+      //SwingUtilities.invokeLater {
+      //ApplicationManager.getApplication().messageBus.syncPublisher(EyeTrackingWidget.TOPIC).set("x: $x y: $y")
+    //}
+
+    synchronized (myHandlersMap) {
+      for ((_, value) in myHandlersMap) {
+        if (x >= value.left
+            && x <= value.right
+            && y >= value.top
+            && y <= value.bottom) {
+          SwingUtilities.invokeLater {
+            ApplicationManager.getApplication().messageBus
+              .syncPublisher(EyeTrackingWidget.TOPIC)
+              .set("I SEE YOU'RE LOOKING AT ME")
+          }
+          return
+        }
+      }
+
+      SwingUtilities.invokeLater {
+        ApplicationManager.getApplication().messageBus
+          .syncPublisher(EyeTrackingWidget.TOPIC)
+          .set("Where are you?")
+      }
     }
+
 
     // todo: match coordinates against data structure
   }
@@ -172,6 +196,12 @@ class EyeTrackerThread(private val settings: EyeTrackingSettings.State) : Thread
   private fun reportSuccessfulConnection(message: String) {
     SwingUtilities.invokeLater {
       EyeTrackingNotifications.deviceConnected(message)
+    }
+  }
+
+  fun update(key : Any, handler: ScreenRectHandler) {
+    synchronized (myHandlersMap) {
+      myHandlersMap[key] = handler
     }
   }
 }
